@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>todolist</title>
+<style>
+/* ===========================
+   GLOBAL
+   =========================== */
+:root{
+  --bg-1: #0f1724;
+  --bg-2: #071029;
+  --card: rgba(255,255,255,0.04);
+  --muted: #9aa9bd;
+  --accent: #22c55e;
+  --accent-2: #06b6d4;
+  --danger: #ef4444;
+  --glass: rgba(255,255,255,0.03);
+  --radius: 14px;
+  --shadow: 0 8px 30px rgba(2,6,23,0.7);
+  --glass-strong: rgba(255,255,255,0.06);
+  --max-width: 960px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* page */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(800px 400px at 10% 15%, rgba(34,197,94,0.06), transparent 6%),
+    linear-gradient(180deg,var(--bg-1), var(--bg-2));
+  color: #e6eef8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px;
+}
+
+/* container */
+.app {
+  width:100%;
+  max-width:var(--max-width);
+  display:grid;
+  grid-template-columns: 1fr 420px;
+  gap:28px;
+  align-items:start;
+}
+
+/* responsive */
+@media (max-width:980px){
+  .app { grid-template-columns: 1fr; padding: 0 12px; }
+}
+
+/* ===========================
+   LEFT: TASKS PANEL
+   =========================== */
+.panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius: calc(var(--radius) + 6px);
+  padding:22px;
+  box-shadow: var(--shadow);
+  min-height:520px;
+}
+
+/* header */
+.header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+.brand {
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.logo {
+  width:56px;
+  height:56px;
+  border-radius:12px;
+  background:linear-gradient(135deg,var(--accent), #16a34a);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:20px;
+  color:#042018;
+  box-shadow: 0 6px 20px rgba(16,185,129,0.12);
+}
+.title {
+  font-size:18px;
+  margin:0;
+}
+.subtitle {
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* header right controls */
+.controls {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* search */
+.search {
+  background:var(--card);
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.02);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.search input{
+  background:transparent;
+  border:0;
+  outline:none;
+  color:inherit;
+  font-size:14px;
+  width:190px;
+}
+.search svg{opacity:0.8;}
+
+/* filters */
+.filters {
+  display:flex;
+  gap:8px;
+  margin-bottom:12px;
+}
+.filter-btn {
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.04);
+  padding:8px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  color:var(--muted);
+  font-size:13px;
+}
+.filter-btn.active{
+  background: linear-gradient(90deg,var(--accent),var(--accent-2));
+  color:#042018;
+  border:0;
+  box-shadow: 0 8px 22px rgba(6,182,212,0.08);
+}
+
+/* list */
+.list {
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  max-height:420px;
+  overflow:auto;
+  padding-right:6px;
+}
+
+/* single task card */
+.task {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  padding:12px;
+  border-radius:12px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  border:1px solid rgba(255,255,255,0.02);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.task:hover{ transform: translateY(-4px); box-shadow: 0 8px 28px rgba(2,6,23,0.6); }
+
+.left {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex:1;
+  min-width:0;
+}
+.priority {
+  width:10px;
+  height:40px;
+  border-radius:8px;
+  flex-shrink:0;
+}
+.content {
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:0;
+}
+.task-title {
+  font-weight:600;
+  font-size:15px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.task-meta {
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* actions */
+.actions {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.icon-btn {
+  width:36px;
+  height:36px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:8px;
+  cursor:pointer;
+  border:0;
+  background:rgba(255,255,255,0.02);
+  color: #e6eef8;
+  font-size:16px;
+  transition: transform .12s ease, background .12s ease;
+}
+.icon-btn:hover { transform:scale(1.08); background: rgba(255,255,255,0.04); }
+
+/* completed state */
+.task.completed {
+  background: linear-gradient(90deg, rgba(34,197,94,0.12), rgba(6,182,212,0.02));
+  text-decoration: line-through;
+  color:#d7f7e8;
+  opacity:0.95;
+}
+
+/* ===========================
+   RIGHT: SIDE PANEL (DETAILS + FORM)
+   =========================== */
+.side {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  padding:18px;
+  border-radius:12px;
+  box-shadow: var(--shadow);
+  min-height:520px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.side h2{margin:0;font-size:16px}
+.form {
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:6px;
+}
+.field {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.input, .textarea, .select {
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.04);
+  padding:10px 12px;
+  color:inherit;
+  border-radius:8px;
+  outline:none;
+}
+.textarea{ min-height:100px; resize:vertical; }
+
+/* big add button */
+.primary {
+  margin-top:auto;
+  padding:12px;
+  border-radius:10px;
+  border:0;
+  background: linear-gradient(90deg,var(--accent),var(--accent-2));
+  color:#042018;
+  font-weight:700;
+  cursor:pointer;
+  font-size:16px;
+  box-shadow: 0 10px 30px rgba(6,182,212,0.06);
+}
+
+/* helper */
+.small {
+  font-size:12px;
+  color:var(--muted);
+  margin-top:6px;
+}
+
+/* empty state */
+.empty {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px;
+  border-radius:10px;
+  border:1px dashed rgba(255,255,255,0.03);
+  color:var(--muted);
+  text-align:center;
+}
+
+/* tiny utilities */
+.row{display:flex;gap:8px;align-items:center}
+.badge{
+  background:rgba(255,255,255,0.03);
+  padding:6px 8px;
+  border-radius:8px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* footer */
+.toolbar {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:12px;
+}
+.clear {
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.03);
+  padding:8px 10px;
+  border-radius:8px;
+  color:var(--muted);
+  cursor:pointer;
+}
+
+/* subtle scrollbar */
+.list::-webkit-scrollbar { width:8px; }
+.list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.04); border-radius:8px; }
+
+/* small screens adjust */
+@media (max-width:520px){
+  .app{ gap:12px; }
+  .logo{ width:48px; height:48px; font-size:18px; }
+  .panel { padding:16px; }
+  .side { padding:14px; }
+}
+
+/* ===========================
+   tiny transitions for inputs
+   =========================== */
+.input:focus, .textarea:focus, .select:focus {
+  border-color: rgba(255,255,255,0.07);
+  box-shadow: 0 6px 18px rgba(6,182,212,0.06);
+}
+</style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Pro ToDo ilovasi">
+    <!-- LEFT PANEL -->
+    <section class="panel" aria-label="Ro'yxat paneli">
+      <div class="header">
+        <div class="brand">
+          <div class="logo">TD</div>
+          <div>
+            <h3 class="title">Pro ToDo</h3>
+            <div class="subtitle">Fast • Clean • Fancy</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="search" title="Qidiruv">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <input id="search" placeholder="Qidirish..." aria-label="Qidirish"/>
+          </div>
+          <button class="badge" id="stats">0 ta</button>
+        </div>
+      </div>
+
+      <div class="filters" role="tablist" aria-label="Filtrlar">
+        <button class="filter-btn active" data-filter="all">Hammasi</button>
+        <button class="filter-btn" data-filter="active">Faol</button>
+        <button class="filter-btn" data-filter="completed">Bajarilgan</button>
+        <button class="filter-btn" data-filter="priority">Muhim</button>
+      </div>
+
+      <div class="list" id="list" aria-live="polite">
+        <!-- tasklar shu yerga tushadi -->
+      </div>
+
+      <div class="toolbar">
+        <div class="row">
+          <button class="clear" id="clear-completed">Bajarilganlarni tozalash</button>
+          <button class="clear" id="export-btn" title="Export JSON">Export</button>
+          <button class="clear" id="import-btn" title="Import JSON">Import</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="small" id="left-count">0 ta qolgan</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: FORM -->
+    <aside class="side" aria-label="Yangi vazifa">
+      <h2>Yangi vazifa qo‘shish</h2>
+      <div class="form" id="form">
+        <div class="field">
+          <label class="small">Sarlavha</label>
+          <input id="title" class="input" placeholder="Masalan: README yozish" />
+        </div>
+        <div class="field">
+          <label class="small">Izoh (ixtiyoriy)</label>
+          <textarea id="desc" class="textarea" placeholder="Batafsil ma'lumot..."></textarea>
+        </div>
+        <div class="row">
+          <div style="flex:1" class="field">
+            <label class="small">Ustuvorlik</label>
+            <select id="priority" class="select">
+              <option value="low">Past</option>
+              <option value="medium" selected>O‘rta</option>
+              <option value="high">Yuqori</option>
+            </select>
+          </div>
+          <div style="width:140px" class="field">
+            <label class="small">Muddati (ixtiyoriy)</label>
+            <input id="due" class="input" type="date" />
+          </div>
+        </div>
+
+        <div class="row" style="gap:12px;">
+          <button class="primary" id="add">+ Vazifani qo‘shish</button>
+          <button class="clear" id="reset-form" title="Formani tozalash">Tozalash</button>
+        </div>
+
+        <div class="small">Qo‘shgach, ro‘yxatda ustiga bosib ✏ bilan tahrirlash yoki ✅ bilan bajarilgan deb belgilash mumkin</div>
+      </div>
+    </aside>
+  </div>
+
+<script>
+// ===========================
+// Pro ToDo — JavaScript
+// ===========================
+
+// Model: task = { id, title, desc, priority, due, completed, createdAt }
+// Storage kaliti
+const STORAGE_KEY = 'pro_todo_v1';
+
+// DOM
+const listEl = document.getElementById('list');
+const addBtn = document.getElementById('add');
+const titleInput = document.getElementById('title');
+const descInput = document.getElementById('desc');
+const priorityInput = document.getElementById('priority');
+const dueInput = document.getElementById('due');
+const statsBtn = document.getElementById('stats');
+const leftCountEl = document.getElementById('left-count');
+const filterBtns = document.querySelectorAll('.filter-btn');
+const searchInput = document.getElementById('search');
+const clearCompletedBtn = document.getElementById('clear-completed');
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const resetFormBtn = document.getElementById('reset-form');
+
+let tasks = [];
+let filter = 'all';
+let searchQuery = '';
+
+// ===========================
+// Helper utilities
+// ===========================
+function uid(prefix='t'){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); updateUI(); }
+function load(){ try { const raw = localStorage.getItem(STORAGE_KEY); tasks = raw ? JSON.parse(raw) : []; } catch(e){ tasks = []; } }
+function formatDate(d){ if(!d) return ''; const dt = new Date(d); return dt.toLocaleDateString(); }
+function priorityColor(p){
+  if(p === 'high') return 'linear-gradient(180deg,#f97316,#fb7185)';
+  if(p === 'medium') return 'linear-gradient(180deg,#facc15,#f97316)';
+  return 'linear-gradient(180deg,#60a5fa,#7dd3fc)';
+}
+
+// ===========================
+// Rendering
+// ===========================
+function renderTaskItem(task){
+  const li = document.createElement('div');
+  li.className = 'task';
+  if(task.completed) li.classList.add('completed');
+
+  // left
+  const left = document.createElement('div');
+  left.className = 'left';
+
+  const pr = document.createElement('div');
+  pr.className = 'priority';
+  pr.style.background = task.priority === 'high' ? '#ef4444' : (task.priority === 'medium' ? '#f59e0b' : '#3b82f6');
+  pr.title = 'Ustuvorlik: ' + task.priority;
+
+  const content = document.createElement('div');
+  content.className = 'content';
+
+  const title = document.createElement('div');
+  title.className = 'task-title';
+  title.textContent = task.title || '— (Sarlavha yo‘q)';
+  title.title = task.title || '';
+
+  const meta = document.createElement('div');
+  meta.className = 'task-meta';
+  const created = new Date(task.createdAt);
+  const metaParts = [];
+  if(task.due) metaParts.push('Muddati: ' + formatDate(task.due));
+  metaParts.push('Yaratildi: ' + created.toLocaleString());
+  meta.textContent = metaParts.join(' • ');
+
+  content.appendChild(title);
+  content.appendChild(meta);
+
+  left.appendChild(pr);
+  left.appendChild(content);
+
+  // actions
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+
+  // complete button
+  const completeBtn = document.createElement('button');
+  completeBtn.className = 'icon-btn';
+  completeBtn.innerHTML = '✅';
+  completeBtn.title = task.completed ? 'Bekor qilish' : 'Bajarilgan deb belgilash';
+  completeBtn.onclick = (e) => {
+    e.stopPropagation();
+    task.completed = !task.completed;
+    save();
+  };
+
+  // edit button
+  const editBtn = document.createElement('button');
+  editBtn.className = 'icon-btn';
+  editBtn.innerHTML = '✏';
+  editBtn.title = 'Tahrirlash';
+  editBtn.onclick = (e) => {
+    e.stopPropagation();
+    openEditPanel(task.id);
+  };
+
+  // delete button
+  const delBtn = document.createElement('button');
+  delBtn.className = 'icon-btn';
+  delBtn.innerHTML = '❌';
+  delBtn.title = 'O‘chirish';
+  delBtn.onclick = (e) => {
+    e.stopPropagation();
+    if(confirm('Bu vazifani o‘chirmoqchimisiz?')) {
+      tasks = tasks.filter(t => t.id !== task.id);
+      save();
+    }
+  };
+
+  actions.appendChild(completeBtn);
+  actions.appendChild(editBtn);
+  actions.appendChild(delBtn);
+
+  // append
+  li.appendChild(left);
+  li.appendChild(actions);
+
+  // click to show details (toggle desc)
+  li.onclick = () => {
+    // show a tiny popup with desc if exists
+    if(task.desc && task.desc.trim() !== ''){
+      alert(task.desc);
+    }
+  };
+
+  // for accessibility
+  li.tabIndex = 0;
+  li.onkeydown = (e) => { if(e.key === 'Enter') li.click(); };
+
+  return li;
+}
+
+function updateUI(){
+  // apply search + filter
+  let visible = tasks.slice();
+  if(filter === 'active') visible = visible.filter(t => !t.completed);
+  if(filter === 'completed') visible = visible.filter(t => t.completed);
+  if(filter === 'priority') visible = visible.filter(t => t.priority === 'high');
+
+  if(searchQuery && searchQuery.trim() !== ''){
+    const q = searchQuery.toLowerCase();
+    visible = visible.filter(t => (t.title || '').toLowerCase().includes(q) || (t.desc || '').toLowerCase().includes(q));
+  }
+
+  // sort by created desc
+  visible.sort((a,b) => b.createdAt - a.createdAt);
+
+  // render
+  listEl.innerHTML = '';
+  if(visible.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = '<div style="max-width:260px">Bu yerda hech narsa yo‘q — yangi vazifa qo‘shing </div>';
+    listEl.appendChild(empty);
+  } else {
+    visible.forEach(t => {
+      listEl.appendChild(renderTaskItem(t));
+    });
+  }
+
+  // stats
+  const total = tasks.length;
+  const left = tasks.filter(t => !t.completed).length;
+  statsBtn.textContent = total + ' ta';
+  leftCountEl.textContent = left + ' ta qolgan';
+}
+
+// ===========================
+// CREATE / EDIT
+// ===========================
+function clearForm(){
+  titleInput.value = '';
+  descInput.value = '';
+  priorityInput.value = 'medium';
+  dueInput.value = '';
+}
+
+function addTaskFromForm(){
+  const title = titleInput.value.trim();
+  const desc = descInput.value.trim();
+  const priority = priorityInput.value;
+  const due = dueInput.value || '';
+
+  if(!title){
+    alert('Iltimos, sarlavhani kiriting');
+    return;
+  }
+
+  const task = {
+    id: uid(),
+    title,
+    desc,
+    priority,
+    due,
+    completed: false,
+    createdAt: Date.now()
+  };
+  tasks.push(task);
+  save();
+  clearForm();
+}
+
+
+function openEditPanel(id){
+  const task = tasks.find(t => t.id === id);
+  if(!task) return;
+
+  titleInput.value = task.title;
+  descInput.value = task.desc || '';
+  priorityInput.value = task.priority || 'medium';
+  dueInput.value = task.due || '';
+
+
+  addBtn.textContent = 'Saqlash o‘zgartirish';
+  addBtn.dataset.editId = id;
+
+  document.querySelector('.side').scrollIntoView({ behavior:'smooth' });
+}
+
+
+function saveEdit(id){
+  const task = tasks.find(t => t.id === id);
+  if(!task) return;
+  const title = titleInput.value.trim();
+  if(!title){ alert('Sarlavha bo‘sh bo‘lishi mumkin emas'); return; }
+  task.title = title;
+  task.desc = descInput.value.trim();
+  task.priority = priorityInput.value;
+  task.due = dueInput.value || '';
+  save();
+
+  addBtn.textContent = '+ Vazifani qo‘shish';
+  delete addBtn.dataset.editId;
+  clearForm();
+}
+
+addBtn.addEventListener('click', () => {
+  const editId = addBtn.dataset.editId;
+  if(editId){
+    saveEdit(editId);
+  } else {
+    addTaskFromForm();
+  }
+});
+
+resetFormBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  clearForm();
+  addBtn.textContent = '+ Vazifani qo‘shish';
+  delete addBtn.dataset.editId;
+});
+
+filterBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filter = btn.dataset.filter;
+    updateUI();
+  });
+});
+
+
+searchInput.addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  updateUI();
+});
+
+clearCompletedBtn.addEventListener('click', () => {
+  if(!confirm('Bajarilgan vazifalarni butunlay o‘chirilsinmi?')) return;
+  tasks = tasks.filter(t => !t.completed);
+  save();
+});
+
+
+exportBtn.addEventListener('click', () => {
+  const data = JSON.stringify(tasks, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'pro_todo_export.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+importBtn.addEventListener('click', () => {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'application/json';
+  fileInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try{
+        const imported = JSON.parse(ev.target.result);
+        if(Array.isArray(imported)){
+
+          const newItems = imported.filter(it => !tasks.some(t => t.id === it.id));
+          tasks = tasks.concat(newItems);
+          save();
+          alert('Import muvaffaqiyatli — ' + newItems.length + ' ta yangi vazifa qo‘shildi');
+        } else {
+          alert('Noto‘g‘ri JSON format');
+        }
+      }catch(err){
+        alert('JSONni o‘qib bo‘lmadi: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  fileInput.click();
+});
+
+
+document.addEventListener('keydown', (e) => {
+  if(e.ctrlKey && e.key === 'Enter'){
+    const editId = addBtn.dataset.editId;
+    if(editId) saveEdit(editId);
+    else addTaskFromForm();
+  }
+});
+
+
+(function init(){
+  load();
+
+  if(tasks.length === 0){
+    tasks = [
+      { id: uid(), title: 'maktabga bor', desc:'8:30 da bor', priority:'high', due:'', completed:false, createdAt: Date.now() - 86400000 },
+      { id: uid(), title: 'maktabdan qayt', desc:'13:30 da qayt', priority:'medium', due:'', completed:false, createdAt: Date.now() - 3600000 },
+    ];
+    save();
+  }
+  updateUI();
+})();
+</script>
+</body>
+</html>
